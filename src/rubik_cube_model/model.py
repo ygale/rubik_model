@@ -1,4 +1,4 @@
-'Core cube model with minimal, link-based representation.'
+'''Core cube model with minimal, link-based representation.'''
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 
 class Color(Enum):
-  'Enumeration of the six cube colors.'
+  '''Enumeration of the six cube colors.'''
   WHITE = auto()
   YELLOW = auto()
   RED = auto()
@@ -16,7 +16,7 @@ class Color(Enum):
   GREEN = auto()
 
 class Side(Enum):
-  'Enumeration of the six cube sides.'
+  '''Enumeration of the six cube sides.'''
   FRONT = auto()
   BACK = auto()
   LEFT = auto()
@@ -26,31 +26,31 @@ class Side(Enum):
 
 @dataclass(eq=False)
 class Sticker(ABC):
-  'Abstract sticker with a color and cyclic partner.'
+  '''Abstract sticker with a color and cyclic partner.'''
   color: Color
   other: Sticker = field(init=False)
 
   def __post_init__(self) -> None:
-    'Initialize as a self-loop before wiring.'
+    '''Initialize as a self-loop before wiring.'''
     self.other = self
 
   def __hash__(self) -> int:
-    'Use object identity for hashing.'
+    '''Use object identity for hashing.'''
     return id(self)
 
 @dataclass(eq=False)
 class CornerSticker(Sticker):
-  'Corner sticker linked in a 3-cycle.'
+  '''Corner sticker linked in a 3-cycle.'''
   other: CornerSticker = field(init=False)
 
 @dataclass(eq=False)
 class EdgeSticker(Sticker):
-  'Edge sticker linked in a 2-cycle.'
+  '''Edge sticker linked in a 2-cycle.'''
   other: EdgeSticker = field(init=False)
 
 @dataclass(eq=False)
 class Cube:
-  'Cube defined by one corner and cyclic adjacency maps.'
+  '''Cube defined by one corner and cyclic adjacency maps.'''
   home: CornerSticker
   front_color: Color
   top_color: Color
@@ -58,7 +58,7 @@ class Cube:
   next_corner: dict[EdgeSticker, CornerSticker]
 
 def validate_links(cube: Cube) -> None:
-  'Check consistency between next_edge and next_corner.'
+  '''Check consistency between next_edge and next_corner.'''
   corner: CornerSticker
   edge: EdgeSticker
   for corner, edge in cube.next_edge.items():
@@ -67,7 +67,7 @@ def validate_links(cube: Cube) -> None:
     assert cube.next_edge[corner] is edge
 
 def solved() -> Cube:
-  'Construct a solved cube using local color relationships.'
+  '''Construct a solved cube using local color relationships.'''
   FRONT: Color = Color.GREEN
   BACK: Color = Color.BLUE
   RIGHT: Color = Color.RED
@@ -78,7 +78,7 @@ def solved() -> Cube:
   edge_cubies: dict[tuple[Color, Color], EdgeSticker] = {}
 
   def make_edge(a: Color, b: Color) -> None:
-    'Create one edge cubie with two directed stickers.'
+    '''Create one edge cubie with two directed stickers.'''
     s_ab: EdgeSticker = EdgeSticker(a)
     s_ba: EdgeSticker = EdgeSticker(b)
     s_ab.other = s_ba
@@ -104,7 +104,7 @@ def solved() -> Cube:
   home: CornerSticker | None = None
 
   def make_corner(a: Color, b: Color, c: Color) -> None:
-    'Create one corner cubie and wire local adjacencies.'
+    '''Create one corner cubie and wire local adjacencies.'''
     nonlocal home
     s: tuple[CornerSticker, CornerSticker, CornerSticker] = (
       CornerSticker(a),
