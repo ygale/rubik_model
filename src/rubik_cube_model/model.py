@@ -101,11 +101,9 @@ def solved() -> Cube:
 
   next_edge: dict[CornerSticker, EdgeSticker] = {}
   next_corner: dict[EdgeSticker, CornerSticker] = {}
-  home: CornerSticker | None = None
 
-  def make_corner(a: Color, b: Color, c: Color) -> None:
+  def make_corner(a: Color, b: Color, c: Color) -> CornerSticker:
     '''Create one corner cubie and wire local adjacencies.'''
-    nonlocal home
     s: tuple[CornerSticker, CornerSticker, CornerSticker] = (
       CornerSticker(a),
       CornerSticker(b),
@@ -114,9 +112,6 @@ def solved() -> Cube:
     s[0].other = s[1]
     s[1].other = s[2]
     s[2].other = s[0]
-
-    if (a, b, c) == (FRONT, LEFT, TOP):
-      home = s[0]
 
     for i in range(3):
       curr: CornerSticker = s[i]
@@ -127,8 +122,10 @@ def solved() -> Cube:
       c2: Color = prv.color
       next_edge[curr] = edge_cubies[(c0, c2)]
       next_corner[edge_cubies[(c0, c1)]] = curr
+    return s[0]
 
-  make_corner(FRONT, LEFT, TOP)
+  home: CornerSticker = make_corner(
+              FRONT, LEFT, TOP)
   make_corner(FRONT, TOP, RIGHT)
   make_corner(FRONT, RIGHT, BOTTOM)
   make_corner(FRONT, BOTTOM, LEFT)
@@ -136,8 +133,6 @@ def solved() -> Cube:
   make_corner(BACK, BOTTOM, RIGHT)
   make_corner(BACK, LEFT, BOTTOM)
   make_corner(BACK, TOP, LEFT)
-
-  assert home is not None
 
   return Cube(
     home=home,
