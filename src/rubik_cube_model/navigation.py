@@ -122,3 +122,16 @@ def side_color(cube: Cube, side: Side) -> Color:
 def color_side(cube: Cube, color: Color) -> Side:
   '''Return the side corresponding to a color.'''
   return color_sides[(cube.front_color, cube.top_color, color)]
+
+def all_colors(cube: Cube) -> dict[Side, list[Color]]:
+  '''Return the eight sticker colors on each side.'''
+  result: dict[Side, list[Color]] = {}
+  side: Side
+  for side in Side:
+    st: Sticker = corner_on_side(cube, side)
+    colors: list[Color] = []
+    for _ in range(8):
+      colors.append(st.color)
+      st = nav([Nav.NEXT], cube, st)
+    result[side] = colors
+  return result
