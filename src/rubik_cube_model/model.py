@@ -29,14 +29,24 @@ class Sticker(ABC):
   '''Abstract sticker with a color and cyclic partner.'''
   color: Color
   other: Sticker = field(init=False)
+  _hash: int = field(init=False, repr=False, compare=False)
 
   def __post_init__(self) -> None:
     '''Initialize as a self-loop before wiring.'''
-    self.other = self
+    self._rewire(self)
+
+  def _rewire(self, other: Sticker) -> None:
+    self.other = other
+    self._hash = hash((self.color, other.color))
+
+  def __eq__(self, other: object) -> bool:
+    if not isinstance(other, Sticker):
+      return NotImplemented
+    return self.color == other.color and self.other.color == other.other.color
 
   def __hash__(self) -> int:
-    '''Use object identity for hashing.'''
-    return id(self)
+    '''Hash based on this sticker's color and its partner's color.'''
+    return self._hash
 
 @dataclass(eq=False)
 class CornerSticker(Sticker):
@@ -94,8 +104,8 @@ def solved() -> Cube:
     '''Create one edge cubie with two directed stickers.'''
     s_ab: EdgeSticker = EdgeSticker(a)
     s_ba: EdgeSticker = EdgeSticker(b)
-    s_ab.other = s_ba
-    s_ba.other = s_ab
+    s_ab._rewire(s_ba)
+    s_ba._rewire(s_ab)
     edge_cubies[(a, b)] = s_ab
     edge_cubies[(b, a)] = s_ba
 
@@ -122,9 +132,9 @@ def solved() -> Cube:
       CornerSticker(b),
       CornerSticker(c),
     )
-    s[0].other = s[1]
-    s[1].other = s[2]
-    s[2].other = s[0]
+    s[0]._rewire(s[1])
+    s[1]._rewire(s[2])
+    s[2]._rewire(s[0])
 
     for i in range(3):
       curr: CornerSticker = s[i]
