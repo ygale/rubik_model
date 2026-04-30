@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import dataclass
 from enum import Enum, auto
 
 from .model import CornerSticker, Cube, EdgeSticker, Side
@@ -19,6 +20,12 @@ class Multiplicity(Enum):
   CW = auto()
   CCW = auto()
   TWO = auto()
+
+@dataclass(frozen=True)
+class Move:
+  '''A face move: a side and a multiplicity.'''
+  face: Side
+  mult: Multiplicity
 
 restore_home: dict[tuple[Side, Multiplicity], list[Nav]] = {
   (Side.FRONT, Multiplicity.CW): parse_navs('ONNO'),
@@ -141,14 +148,14 @@ def _move_home(cube: Cube, side: Side, m: Multiplicity) -> None:
   if key in restore_home:
     cube.home = nav_cc(restore_home[key], cube, cube.home)
 
-def move(cube: Cube, side: Side, m: Multiplicity) -> None:
+def move(cube: Cube, m: Move) -> None:
   '''Rotate a face with given multiplicity.'''
-  corner: CornerSticker = corner_on_side(cube, side)
-  _move_corner(cube, corner, m)
-  _move_home(cube, side, m)
+  corner: CornerSticker = corner_on_side(cube, m.face)
+  _move_corner(cube, corner, m.mult)
+  _move_home(cube, m.face, m.mult)
 
-def moved(cube: Cube, side: Side, m: Multiplicity) -> Cube:
+def moved(cube: Cube, m: Move) -> Cube:
   '''Return a new cube after rotating a face.'''
   new: Cube = deepcopy(cube)
-  move(new, side, m)
+  move(new, m)
   return new

@@ -125,7 +125,7 @@ A `Move` is a `Side` and a `Multiplicity`. `Multiplicity` is `CW` for
 clockwise, `CCW` for counterclockwise, or `TWO` for a double twist (which is
 the same in either direction).
 
-`move(cube, side, m)` applies the move in place. `moved(cube, side, m)` is
+`move(cube, m)` applies the move in place. `moved(cube, m)` is
 the immutable version: it returns a new cube with the move applied, leaving
 the original unchanged.
 

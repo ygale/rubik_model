@@ -22,6 +22,13 @@ from .navigation import (
   all_colors,
 )
 
+from .move import (
+  Multiplicity,
+  Move,
+  move,
+  moved,
+)
+
 __all__ = [
   'Color',
   'Side',
@@ -41,4 +48,8 @@ __all__ = [
   'side_color',
   'color_side',
   'all_colors',
+  'Multiplicity',
+  'Move',
+  'move',
+  'moved',
 ]
