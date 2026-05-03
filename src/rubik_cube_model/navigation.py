@@ -105,7 +105,7 @@ for corner in _temp.next_edge.keys():
     path: list[Nav]
     for side, path in HOME_TO_SIDE.items():
       target: CornerSticker = nav_cc(path, _temp, s)
-      side_colors[(s.color, s.other.color, side)] = target.color
+      side_colors[(s.color, s.other.other.color, side)] = target.color
     s = s.other
 
 color_sides: dict[tuple[Color, Color, Color], Side] = {

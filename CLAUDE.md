@@ -117,7 +117,11 @@ by traversing the face ring.
 `side_colors` and `color_sides` are module-level dicts precomputed at import
 time from a solved cube. They map `(front_color, top_color, side)` to the
 center color of that side, and `(front_color, top_color, center_color)` to the
-corresponding `Side`, for every valid orientation.
+corresponding `Side`, for every valid orientation. The table is keyed on
+`(s.color, s.other.other.color, side)` during construction, where `s` is a
+corner sticker: `s.color` is the front-face color and `s.other.other.color`
+is the top-face color of that sticker's cubie, matching the `front_color` and
+`top_color` fields of `Cube`.
 
 ## Face Moves
 
@@ -158,6 +162,66 @@ the appropriate direction. No sticker object moves; only the links change.
 `_move_home` updates `cube.home` after moves that displace it. `restore_home`
 caches the navigation path from the displaced sticker back to the new home
 position, keyed by `(Side, Multiplicity)`.
+
+## Reachability
+
+`reachable(cube)` returns `True` if and only if the cube position can be
+reached from the solved state by a sequence of face moves. It checks three
+independent criteria, each corresponding to a conserved quantity that every
+face move preserves.
+
+These three criteria together are also sufficient -
+if all three criteria are satisfied, the cube position can be
+reached from the solved state by a sequence of face moves.
+
+### Permutation parity (`locations_ok`)
+
+Each face move cycles 4 corner cubies and 4 edge cubies simultaneously. A
+4-cycle is an odd permutation, so every move changes the parity of both the
+corner permutation and the edge permutation by the same amount. The two
+parities therefore always stay equal. `locations_ok` verifies this by
+computing the permutation that takes the current corner-cubie order to the
+solved order, and likewise for edge cubies, and checking that both
+permutations are even or both are odd.
+
+Cubies are identified by the frozenset of their sticker colors. The ordering
+is produced by `_all_corners` and `_all_edges`, which enumerate cubies in a
+fixed sequence via navigation from `cube.home` and `corner_on_side(BACK)`.
+
+### Edge flip parity (`edge_flips_ok`)
+
+Each edge cubie has a well-defined orientation: it is either in its natural
+state or flipped 180°. To measure this without absolute coordinates, each
+edge cubie has a representative sticker (the one whose color ranks first in
+the priority order blue > green > white > yellow) and a representative face
+(the face among the two it straddles whose center color ranks first in the
+same order). The cubie is flipped if its representative sticker is not on its
+representative face.
+
+Every face move flips an even number of edge cubies (in fact exactly 0 or 4
+depending on the axis of the turn), so the total flip count is always even.
+`edge_flips_ok` counts the flipped cubies and checks that the count is even.
+
+### Corner rotation sum (`corner_rotations_ok`)
+
+Each corner cubie has a rotation number 0, 1, or 2, measured in units of
+120° clockwise as seen from outside the cube. The rotation is determined by
+which face the white-or-yellow sticker of the cubie lands on: 0 if it is on a
+white/yellow face, 1 if rotating the cubie 120° clockwise would put it there
+(i.e. `r.other` is on a white/yellow face), and 2 otherwise.
+
+Every face move changes the rotation sum by a multiple of 3, so the sum is
+always divisible by 3. `corner_rotations_ok` sums the rotation numbers of all
+8 corners and checks divisibility.
+
+#### Implementation detail
+
+`_all_corners` and `_all_edges` are generators. `_all_corners` yields from
+`side_corners(cube.home)` then `side_corners(corner_on_side(BACK))`, covering
+all 8 corner cubies. `_all_edges` yields `next_edge[c]` for each front corner
+(4 front-ring edges), `next_edge[c.other.other]` for each front corner (4
+middle-layer edges), and `next_edge[c]` for each back corner (4 back-ring
+edges), covering all 12 edge cubies.
 
 ## Conventions Specific to This Project
 

@@ -29,6 +29,18 @@ from .move import (
   moved,
 )
 
+from .utils import (
+  permutation_cycles,
+  even_permutation,
+)
+
+from .reachable import (
+  locations_ok,
+  edge_flips_ok,
+  corner_rotations_ok,
+  reachable,
+)
+
 __all__ = [
   'Color',
   'Side',
@@ -52,4 +64,10 @@ __all__ = [
   'Move',
   'move',
   'moved',
+  'permutation_cycles',
+  'even_permutation',
+  'locations_ok',
+  'edge_flips_ok',
+  'corner_rotations_ok',
+  'reachable',
 ]
