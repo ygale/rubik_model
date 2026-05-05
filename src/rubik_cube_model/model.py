@@ -85,78 +85,114 @@ def shallow_copy(cube: Cube) -> Cube:
     next_corner=dict(cube.next_corner),
   )
 
-def solved() -> Cube:
-  '''Construct a solved cube using local color relationships.'''
-  FRONT: Color = Color.GREEN
-  BACK: Color = Color.BLUE
-  RIGHT: Color = Color.RED
-  LEFT: Color = Color.ORANGE
-  TOP: Color = Color.WHITE
-  BOTTOM: Color = Color.YELLOW
+def solved(initial: Cube | None = None) -> Cube:
+  '''Construct a solved cube.
+
+  If initial is supplied, reuse its sticker objects instead of
+  allocating new ones. Each directed sticker is uniquely identified
+  by (sticker.color, sticker.other.color), so every sticker from
+  initial is indexed by that pair and looked up in place of a freshly
+  constructed one. Only new dicts are built; the sticker objects and
+  their .other links are left untouched.
+  '''
+  color: dict[Side, Color] = {
+    Side.FRONT:  Color.GREEN,
+    Side.BACK:   Color.BLUE,
+    Side.RIGHT:  Color.RED,
+    Side.LEFT:   Color.ORANGE,
+    Side.TOP:    Color.WHITE,
+    Side.BOTTOM: Color.YELLOW,
+  }
+
+  existing_edges: dict[tuple[Color, Color], EdgeSticker]
+  existing_corners: dict[tuple[Color, Color], CornerSticker]
+  if initial is not None:
+    existing_edges = {
+      (es.color, es.other.color): es
+      for es in initial.next_corner.keys()
+    }
+    existing_corners = {
+      (cs.color, cs.other.color): cs
+      for cs in initial.next_edge.keys()
+    }
+  else:
+    existing_edges = {}
+    existing_corners = {}
 
   edge_cubies: dict[tuple[Color, Color], EdgeSticker] = {}
 
   def make_edge(a: Color, b: Color) -> None:
-    '''Create one edge cubie with two directed stickers.'''
-    s_ab: EdgeSticker = EdgeSticker(a)
-    s_ba: EdgeSticker = EdgeSticker(b)
-    s_ab._rewire(s_ba)
-    s_ba._rewire(s_ab)
+    '''Create or reuse one edge cubie with two directed stickers.'''
+    if (a, b) in existing_edges:
+      s_ab: EdgeSticker = existing_edges[(a, b)]
+      s_ba: EdgeSticker = existing_edges[(b, a)]
+    else:
+      s_ab = EdgeSticker(a)
+      s_ba = EdgeSticker(b)
+      s_ab._rewire(s_ba)
+      s_ba._rewire(s_ab)
     edge_cubies[(a, b)] = s_ab
     edge_cubies[(b, a)] = s_ba
 
-  make_edge(FRONT, TOP)
-  make_edge(FRONT, RIGHT)
-  make_edge(FRONT, BOTTOM)
-  make_edge(FRONT, LEFT)
-  make_edge(BACK, TOP)
-  make_edge(BACK, RIGHT)
-  make_edge(BACK, BOTTOM)
-  make_edge(BACK, LEFT)
-  make_edge(TOP, RIGHT)
-  make_edge(TOP, LEFT)
-  make_edge(BOTTOM, RIGHT)
-  make_edge(BOTTOM, LEFT)
+  make_edge(color[Side.FRONT], color[Side.TOP])
+  make_edge(color[Side.FRONT], color[Side.RIGHT])
+  make_edge(color[Side.FRONT], color[Side.BOTTOM])
+  make_edge(color[Side.FRONT], color[Side.LEFT])
+  make_edge(color[Side.BACK],  color[Side.TOP])
+  make_edge(color[Side.BACK],  color[Side.RIGHT])
+  make_edge(color[Side.BACK],  color[Side.BOTTOM])
+  make_edge(color[Side.BACK],  color[Side.LEFT])
+  make_edge(color[Side.TOP],   color[Side.RIGHT])
+  make_edge(color[Side.TOP],   color[Side.LEFT])
+  make_edge(color[Side.BOTTOM],color[Side.RIGHT])
+  make_edge(color[Side.BOTTOM],color[Side.LEFT])
 
   next_edge: dict[CornerSticker, EdgeSticker] = {}
   next_corner: dict[EdgeSticker, CornerSticker] = {}
 
   def make_corner(a: Color, b: Color, c: Color) -> CornerSticker:
-    '''Create one corner cubie and wire local adjacencies.'''
-    s: tuple[CornerSticker, CornerSticker, CornerSticker] = (
-      CornerSticker(a),
-      CornerSticker(b),
-      CornerSticker(c),
-    )
-    s[0]._rewire(s[1])
-    s[1]._rewire(s[2])
-    s[2]._rewire(s[0])
+    '''Create or reuse one corner cubie and wire local adjacencies.'''
+    if (a, b) in existing_corners:
+      s: tuple[CornerSticker, CornerSticker, CornerSticker] = (
+        existing_corners[(a, b)],
+        existing_corners[(b, c)],
+        existing_corners[(c, a)],
+      )
+    else:
+      s = (
+        CornerSticker(a),
+        CornerSticker(b),
+        CornerSticker(c),
+      )
+      s[0]._rewire(s[1])
+      s[1]._rewire(s[2])
+      s[2]._rewire(s[0])
 
     for i in range(3):
       curr: CornerSticker = s[i]
-      nxt: CornerSticker = s[(i + 1) % 3]
-      prv: CornerSticker = s[(i - 1) % 3]
+      nxt: CornerSticker  = s[(i + 1) % 3]
+      prv: CornerSticker  = s[(i - 1) % 3]
       c0: Color = curr.color
       c1: Color = nxt.color
       c2: Color = prv.color
-      next_edge[curr] = edge_cubies[(c0, c2)]
+      next_edge[curr]                    = edge_cubies[(c0, c2)]
       next_corner[edge_cubies[(c0, c1)]] = curr
     return s[0]
 
   home: CornerSticker = make_corner(
-              FRONT, LEFT, TOP)
-  make_corner(FRONT, TOP, RIGHT)
-  make_corner(FRONT, RIGHT, BOTTOM)
-  make_corner(FRONT, BOTTOM, LEFT)
-  make_corner(BACK, RIGHT, TOP)
-  make_corner(BACK, BOTTOM, RIGHT)
-  make_corner(BACK, LEFT, BOTTOM)
-  make_corner(BACK, TOP, LEFT)
+    color[Side.FRONT], color[Side.LEFT],   color[Side.TOP])
+  make_corner(color[Side.FRONT], color[Side.TOP],    color[Side.RIGHT])
+  make_corner(color[Side.FRONT], color[Side.RIGHT],  color[Side.BOTTOM])
+  make_corner(color[Side.FRONT], color[Side.BOTTOM], color[Side.LEFT])
+  make_corner(color[Side.BACK],  color[Side.RIGHT],  color[Side.TOP])
+  make_corner(color[Side.BACK],  color[Side.BOTTOM], color[Side.RIGHT])
+  make_corner(color[Side.BACK],  color[Side.LEFT],   color[Side.BOTTOM])
+  make_corner(color[Side.BACK],  color[Side.TOP],    color[Side.LEFT])
 
   return Cube(
     home=home,
-    front_color=FRONT,
-    top_color=TOP,
+    front_color=color[Side.FRONT],
+    top_color=color[Side.TOP],
     next_edge=next_edge,
     next_corner=next_corner,
   )
