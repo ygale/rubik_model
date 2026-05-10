@@ -19,4 +19,4 @@ _ALL_MOVES: list[Move] = [
 @pytest.mark.parametrize('m', _ALL_MOVES, ids=str)
 def test_integrity_after_move(m: Move) -> None:
     '''Integrity holds after applying each single move to a solved cube.'''
-    check_cube_integrity(moved(solved(), m))
+    check_cube_integrity(moved(m, solved()))

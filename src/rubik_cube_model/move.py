@@ -155,14 +155,14 @@ def _move_home(cube: Cube, side: Side, m: Multiplicity) -> None:
   if key in restore_home:
     cube.home = nav_cc(restore_home[key], cube, cube.home)
 
-def move(cube: Cube, m: Move) -> None:
+def move(m: Move, cube: Cube) -> None:
   '''Rotate a face with given multiplicity.'''
   corner: CornerSticker = corner_on_side(cube, m.face)
   _move_corner(cube, corner, m.mult)
   _move_home(cube, m.face, m.mult)
 
-def moved(cube: Cube, m: Move) -> Cube:
+def moved(m: Move, cube: Cube) -> Cube:
   '''Return a new cube after rotating a face.'''
   new: Cube = shallow_copy(cube)
-  move(new, m)
+  move(m, new)
   return new

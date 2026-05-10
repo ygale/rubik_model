@@ -5,13 +5,13 @@ Rotation, WideMove, and SliceMove are frozen dataclasses wrapping a
 Move, distinct concrete types at runtime while serving as newtypes of
 Move at the type-checker level.
 
-act(cube, action) applies an action in place.
-acted(cube, action) returns a new cube with the action applied.
+act(action, cube) applies an action in place.
+acted(action, cube) returns a new cube with the action applied.
 
 Decompositions:
-  WideMove(m)  — rotate(m, cube); move(cube, Move(opp_side[m.face], m.mult))
-  SliceMove(m) — rotate(m, cube); move(cube, Move(opp_side[m.face], m.mult));
-                 move(cube, Move(m.face, invert[m.mult]))
+  WideMove(m)  — rotate(m, cube); move(Move(opp_side[m.face], m.mult), cube)
+  SliceMove(m) — rotate(m, cube); move(Move(opp_side[m.face], m.mult), cube);
+                 move(Move(m.face, invert[m.mult]), cube)
 
 parse_actions(s, ci=False) parses standard Rubik's cube move notation.
 Tokens may be written with or without spaces between them. Each token
@@ -176,24 +176,24 @@ def parse_actions(s: str, ci: bool = False) -> list[Action]:
     return actions
 
 
-def act(cube: Cube, action: Action) -> None:
+def act(action: Action, cube: Cube) -> None:
     '''Apply an action to a cube in place.'''
     match action:
         case Rotation(move=m):
             rotate(m, cube)
         case WideMove(move=m):
             rotate(m, cube)
-            move(cube, Move(opp_side[m.face], m.mult))
+            move(Move(opp_side[m.face], m.mult), cube)
         case SliceMove(move=m):
             rotate(m, cube)
-            move(cube, Move(opp_side[m.face], m.mult))
-            move(cube, Move(m.face, invert[m.mult]))
+            move(Move(opp_side[m.face], m.mult), cube)
+            move(Move(m.face, invert[m.mult]), cube)
         case Move() as m:
-            move(cube, m)
+            move(m, cube)
 
 
-def acted(cube: Cube, action: Action) -> Cube:
+def acted(action: Action, cube: Cube) -> Cube:
     '''Return a new cube with an action applied, leaving the original unchanged.'''
     new: Cube = shallow_copy(cube)
-    act(new, action)
+    act(action, new)
     return new

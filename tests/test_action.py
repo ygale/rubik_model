@@ -266,19 +266,19 @@ class TestAct:
     def test_act_face_move(self) -> None:
         '''act() with a Move applies a face move and preserves integrity.'''
         cube = solved()
-        act(cube, Move(Side.RIGHT, Multiplicity.CW))
+        act(Move(Side.RIGHT, Multiplicity.CW), cube)
         check_cube_integrity(cube)
 
     def test_act_face_move_changes_cube(self) -> None:
         '''act() with a Move changes the cube state.'''
         cube = solved()
-        act(cube, Move(Side.FRONT, Multiplicity.CW))
+        act(Move(Side.FRONT, Multiplicity.CW), cube)
         assert cube != solved()
 
     def test_act_rotation_changes_orientation(self) -> None:
         '''act() with a Rotation (z-CW) keeps GREEN on FRONT, WHITE on RIGHT.'''
         cube = solved()
-        act(cube, Rotation(Move(Side.FRONT, Multiplicity.CW)))
+        act(Rotation(Move(Side.FRONT, Multiplicity.CW)), cube)
         check_cube_integrity(cube)
         colors: dict[Side, list[Color]] = all_colors(cube)
         assert all(c == Color.GREEN for c in colors[Side.FRONT])
@@ -287,23 +287,23 @@ class TestAct:
     def test_act_rotation_in_place(self) -> None:
         '''act() with a Rotation modifies the cube in place.'''
         cube = solved()
-        act(cube, Rotation(Move(Side.RIGHT, Multiplicity.CW)))
+        act(Rotation(Move(Side.RIGHT, Multiplicity.CW)), cube)
         assert cube != solved()
 
     def test_act_wide_matches_decomposition(self) -> None:
         '''act() with WideMove matches manual rotate+move decomposition.'''
         m: Move = Move(Side.TOP, Multiplicity.CW)
         c1 = solved()
-        act(c1, WideMove(m))
+        act(WideMove(m), c1)
         c2 = solved()
         rotate(m, c2)
-        move(c2, Move(opp_side[m.face], m.mult))
+        move(Move(opp_side[m.face], m.mult), c2)
         assert c1 == c2
 
     def test_act_wide_changes_cube(self) -> None:
         '''act() with WideMove changes the cube state.'''
         cube = solved()
-        act(cube, WideMove(Move(Side.TOP, Multiplicity.CW)))
+        act(WideMove(Move(Side.TOP, Multiplicity.CW)), cube)
         check_cube_integrity(cube)
         assert cube != solved()
 
@@ -313,24 +313,24 @@ class TestAct:
             cube = solved()
             w: Action = WideMove(Move(face, Multiplicity.CW))
             for _ in range(4):
-                act(cube, w)
+                act(w, cube)
             assert cube == solved(), f'WideMove {face.name} CW period != 4'
 
     def test_act_slice_matches_decomposition(self) -> None:
         '''act() with SliceMove matches manual decomposition.'''
         m: Move = Move(Side.LEFT, Multiplicity.CW)
         c1 = solved()
-        act(c1, SliceMove(m))
+        act(SliceMove(m), c1)
         c2 = solved()
         rotate(m, c2)
-        move(c2, Move(opp_side[m.face], m.mult))
-        move(c2, Move(m.face, invert[m.mult]))
+        move(Move(opp_side[m.face], m.mult), c2)
+        move(Move(m.face, invert[m.mult]), c2)
         assert c1 == c2
 
     def test_act_slice_changes_cube(self) -> None:
         '''act() with SliceMove changes the cube state.'''
         cube = solved()
-        act(cube, SliceMove(Move(Side.LEFT, Multiplicity.CW)))
+        act(SliceMove(Move(Side.LEFT, Multiplicity.CW)), cube)
         check_cube_integrity(cube)
         assert cube != solved()
 
@@ -340,7 +340,7 @@ class TestAct:
             cube = solved()
             s: Action = SliceMove(Move(face, Multiplicity.CW))
             for n in range(1, 13):
-                act(cube, s)
+                act(s, cube)
                 if cube == solved():
                     break
             assert cube == solved(), (
@@ -350,20 +350,20 @@ class TestAct:
     def test_act_parsed_wide(self) -> None:
         '''act() dispatches correctly on a wide move from parse_actions.'''
         cube = solved()
-        act(cube, parse_actions('u')[0])
+        act(parse_actions('u')[0], cube)
         assert cube != solved()
 
     def test_act_parsed_slice(self) -> None:
         '''act() dispatches correctly on a slice move from parse_actions.'''
         cube = solved()
-        act(cube, parse_actions('M')[0])
+        act(parse_actions('M')[0], cube)
         assert cube != solved()
 
     def test_act_spaceless_sequence(self) -> None:
         '''act() over a spaceless-parsed face sequence preserves integrity.'''
         cube = solved()
         for action in parse_actions("RUR'U'"):
-            act(cube, action)
+            act(action, cube)
         check_cube_integrity(cube)
 
 
@@ -373,20 +373,20 @@ class TestActed:
     def test_acted_face_move(self) -> None:
         '''acted() returns a changed cube and preserves integrity.'''
         cube = solved()
-        new_cube = acted(cube, Move(Side.LEFT, Multiplicity.CCW))
+        new_cube = acted(Move(Side.LEFT, Multiplicity.CCW), cube)
         check_cube_integrity(new_cube)
         assert new_cube != solved()
 
     def test_acted_face_move_immutable(self) -> None:
         '''acted() does not mutate the original cube.'''
         cube = solved()
-        acted(cube, Move(Side.TOP, Multiplicity.CW))
+        acted(Move(Side.TOP, Multiplicity.CW), cube)
         assert cube == solved()
 
     def test_acted_rotation(self) -> None:
         '''acted() with Rotation (y-CW) brings RED to FRONT.'''
         cube = solved()
-        new_cube = acted(cube, Rotation(Move(Side.TOP, Multiplicity.CW)))
+        new_cube = acted(Rotation(Move(Side.TOP, Multiplicity.CW)), cube)
         check_cube_integrity(new_cube)
         colors: dict[Side, list[Color]] = all_colors(new_cube)
         assert all(c == Color.RED for c in colors[Side.FRONT])
@@ -394,40 +394,40 @@ class TestActed:
     def test_acted_rotation_immutable(self) -> None:
         '''acted() with Rotation does not mutate the original.'''
         cube = solved()
-        acted(cube, Rotation(Move(Side.RIGHT, Multiplicity.CW)))
+        acted(Rotation(Move(Side.RIGHT, Multiplicity.CW)), cube)
         assert cube == solved()
 
     def test_acted_wide(self) -> None:
         '''acted() with WideMove returns correct cube.'''
         m: Move = Move(Side.FRONT, Multiplicity.CCW)
         c2 = solved()
-        c1 = acted(c2, WideMove(m))
+        c1 = acted(WideMove(m), c2)
         check_cube_integrity(c1)
         rotate(m, c2)
-        move(c2, Move(opp_side[m.face], m.mult))
+        move(Move(opp_side[m.face], m.mult), c2)
         assert c1 == c2
 
     def test_acted_wide_immutable(self) -> None:
         '''acted() with WideMove does not mutate the original.'''
         cube = solved()
-        acted(cube, WideMove(Move(Side.TOP, Multiplicity.CW)))
+        acted(WideMove(Move(Side.TOP, Multiplicity.CW)), cube)
         assert cube == solved()
 
     def test_acted_slice(self) -> None:
         '''acted() with SliceMove returns correct cube.'''
         m: Move = Move(Side.FRONT, Multiplicity.CW)
         c2 = solved()
-        c1 = acted(c2, SliceMove(m))
+        c1 = acted(SliceMove(m), c2)
         check_cube_integrity(c1)
         rotate(m, c2)
-        move(c2, Move(opp_side[m.face], m.mult))
-        move(c2, Move(m.face, invert[m.mult]))
+        move(Move(opp_side[m.face], m.mult), c2)
+        move(Move(m.face, invert[m.mult]), c2)
         assert c1 == c2
 
     def test_acted_slice_immutable(self) -> None:
         '''acted() with SliceMove does not mutate the original.'''
         cube = solved()
-        acted(cube, SliceMove(Move(Side.LEFT, Multiplicity.CW)))
+        acted(SliceMove(Move(Side.LEFT, Multiplicity.CW)), cube)
         assert cube == solved()
 
     def test_acted_wide_period(self) -> None:
@@ -435,7 +435,7 @@ class TestActed:
         cube = solved()
         w: Action = WideMove(Move(Side.RIGHT, Multiplicity.CW))
         for _ in range(4):
-            cube = acted(cube, w)
+            cube = acted(w, cube)
         assert cube == solved()
 
     def test_acted_sequence(self) -> None:
@@ -443,5 +443,5 @@ class TestActed:
         integrity.'''
         cube = solved()
         for action in parse_actions("R U R' U'"):
-            cube = acted(cube, action)
+            cube = acted(action, cube)
         check_cube_integrity(cube)
