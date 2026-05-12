@@ -1,10 +1,11 @@
 [tool.poetry]
 name = "rubik-model"
-version = "1.0.2"
+version = "1.0.3"
 description = "Orientation-independent Rubik cube model in strictly typed Python"
 authors = ["Yitzchak Gale <gale@sefer.org>"]
 readme = "README.md"
 packages = [{ include = "rubik_model", from = "src" }]
+include = [{ path = "src/rubik_model/py.typed", format = ["sdist", "wheel"] }]
 homepage = "https://github.com/ygale/rubik_model"
 repository = "https://github.com/ygale/rubik_model"
 
